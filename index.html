@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AquaControl - Sistema de Monitoramento de Água</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>AquaControl + Energy - Sistema de Monitoramento Integrado</title>
   <style>
     @page {
       size: A4 portrait;
-      margin: 12mm;
+      margin: 10mm;
       background-color: #0f172a;
     }
 
@@ -21,10 +19,10 @@
       --border: #334155;
       --primary: #0284c7;
       --primary-hover: #0369a1;
+      --energy: #eab308;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --success: #10b981;
-      --warning: #f59e0b;
       --danger: #ef4444;
     }
 
@@ -47,7 +45,6 @@
 
     header h1 { font-size: 1.3rem; color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 10px; }
     .header-actions { display: flex; align-items: center; gap: 12px; }
-    .status-badge-head { font-size: 0.8rem; background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--success); }
 
     .btn-pdf {
       background: #10b981;
@@ -65,7 +62,32 @@
     }
     .btn-pdf:hover { background: #059669; }
 
-    .main-layout { display: block; }
+    .status-badge {
+      font-size: 0.8rem;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
 
     nav {
       background: #0b1120;
@@ -96,19 +118,19 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Cards de Estatísticas */
-    .kpi-grid { display: table; width: 100%; table-layout: fixed; margin-bottom: 1.5rem; border-spacing: 12px 0; }
-    .kpi-card { display: table-cell; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; vertical-align: top; }
-    .kpi-card h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-    .kpi-card .number { font-size: 1.6rem; font-weight: bold; }
+    .section-title { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Reservatórios / Tanques Visual */
-    .tanks-grid { display: table; width: 100%; table-layout: fixed; margin-bottom: 1.5rem; border-spacing: 12px 0; }
-    .tank-card { display: table-cell; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; vertical-align: middle; }
-    
-    .tank-flex { display: table; width: 100%; }
-    .tank-visual-cell { display: table-cell; width: 60px; vertical-align: middle; }
-    .tank-info-cell { display: table-cell; padding-left: 1rem; vertical-align: middle; }
+    /* Grid de Energia */
+    .energy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .energy-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--energy); border-radius: 10px; padding: 1rem; }
+    .energy-card.solar { border-left-color: var(--success); }
+    .energy-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .energy-card .number { font-size: 1.5rem; font-weight: bold; color: #fff; }
+    .energy-card .unit { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Tanks Grid */
+    .tanks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+    .tank-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; display: flex; gap: 1.2rem; align-items: center; }
 
     .tank-visual {
       width: 50px;
@@ -119,18 +141,22 @@
       overflow: hidden;
       background: #0f172a;
     }
+
     .tank-fill {
       position: absolute;
       bottom: 0;
       width: 100%;
-      background: #0284c7;
+      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      transition: height 0.8s ease-in-out;
     }
-    .tank-info-cell h4 { font-size: 1rem; margin: 0 0 4px 0; }
-    .tank-info-cell p { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 8px 0; }
-    .tank-val { font-size: 1.2rem; font-weight: bold; }
+
+    .tank-info { flex: 1; }
+    .tank-info h4 { font-size: 1rem; margin-bottom: 2px; }
+    .tank-info p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+    .tank-val { font-size: 1.3rem; font-weight: bold; }
 
     /* Formulário */
-    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; max-width: 600px; margin-bottom: 2rem; }
+    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; max-width: 600px; }
     .form-group { margin-bottom: 1.2rem; }
     .form-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted); }
     .form-control {
@@ -142,7 +168,6 @@
       color: #fff;
       font-size: 0.95rem;
     }
-    .form-control:focus { outline: none; border-color: var(--primary); }
     .btn {
       background: var(--primary);
       color: #fff;
@@ -155,16 +180,15 @@
     }
 
     /* Tabela */
-    .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
+    .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
-    th { background: #0f172a; padding: 12px 14px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    th { background: #0f172a; padding: 12px 14px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
     td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 
-    .badge { padding: 4px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+    .badge { padding: 4px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
     .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
     .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
 
-    /* Estilos para impressão / Exportação PDF */
     @media print {
       nav, .btn-pdf, #novo-lancamento, .no-print { display: none !important; }
       body { background-color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -177,145 +201,141 @@
 <body>
 
   <header>
-    <h1>💧 AquaControl - Portal Operacional</h1>
+    <h1>💧⚡ AquaControl Energy - Messogeo</h1>
     <div class="header-actions">
       <button class="btn-pdf" onclick="baixarPDF()">📄 Baixar Relatório PDF</button>
-      <div class="status-badge-head">● Telemetria IoT Ativa</div>
+      <div class="status-badge">
+        <div class="pulse-dot"></div>
+        <span>Telemetria IoT / API Ativa</span>
+      </div>
     </div>
   </header>
 
   <nav class="no-print">
-    <button class="nav-btn active" onclick="switchTab('dashboard', this)">📊 Visão Geral</button>
+    <button class="nav-btn active" onclick="switchTab('dashboard', this)">📊 Painel de Controle</button>
     <button class="nav-btn" onclick="switchTab('novo-lancamento', this)">📝 Lançar Análise</button>
     <button class="nav-btn" onclick="switchTab('historico', this)">📋 Histórico de Coletas</button>
   </nav>
 
-  <div class="main-layout" id="relatorio-area">
-    <main>
-      <!-- TAB 1: DASHBOARD & TELEMETRIA -->
-      <section id="dashboard" class="tab-content active">
-        <h2 style="margin-bottom: 1rem; font-size: 1.2rem;">Status dos Reservatórios em Tempo Real</h2>
-        
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <h3>Total de Reservatórios</h3>
-            <div class="number">3 Ativos</div>
-          </div>
-          <div class="kpi-card">
-            <h3>Qualidade Geral</h3>
-            <div class="number" style="color: var(--success);" id="kpi-qualidade">100% OK</div>
-          </div>
-          <div class="kpi-card">
-            <h3>Última Atualização</h3>
-            <div class="number" id="kpi-ultima-data">10/08/2026 08:45</div>
+  <main>
+    <!-- TAB 1: DASHBOARD COMPLETO -->
+    <section id="dashboard" class="tab-content active">
+      <div class="section-title">⚡ Telemetria Elétrica (Bombas & Usina Solar)</div>
+      <div class="energy-grid">
+        <div class="energy-card">
+          <h3>Tensão (V)</h3>
+          <div class="number" id="val-tensao">221.5 <span class="unit">V</span></div>
+        </div>
+        <div class="energy-card">
+          <h3>Corrente (A)</h3>
+          <div class="number" id="val-corrente">14.2 <span class="unit">A</span></div>
+        </div>
+        <div class="energy-card">
+          <h3>Potência Ativa</h3>
+          <div class="number" id="val-potencia">3.145 <span class="unit">W</span></div>
+        </div>
+        <div class="energy-card">
+          <h3>Consumo</h3>
+          <div class="number" id="val-consumo">142.8 <span class="unit">kWh</span></div>
+        </div>
+        <div class="energy-card solar">
+          <h3>Geração Solar</h3>
+          <div class="number" style="color: var(--success);" id="val-geracao">310.5 <span class="unit">kWh</span></div>
+        </div>
+      </div>
+
+      <div class="section-title">💧 Nível dos Reservatórios em Tempo Real (IoT)</div>
+      <div class="tanks-grid">
+        <div class="tank-card">
+          <div class="tank-visual"><div class="tank-fill" id="fill-tanque-1" style="height: 85%;"></div></div>
+          <div class="tank-info">
+            <h4>Reservatório Central</h4>
+            <p>Sensor Ultrassônico #01</p>
+            <div class="tank-val" id="val-tanque-1">85%</div>
           </div>
         </div>
 
-        <h3 style="margin-bottom: 0.8rem; font-size: 1rem; color: var(--text-muted);">Nível Atual (Sensores IoT Telemetria)</h3>
-        <div class="tanks-grid">
-          <div class="tank-card">
-            <div class="tank-flex">
-              <div class="tank-visual-cell">
-                <div class="tank-visual"><div class="tank-fill" style="height: 85%;"></div></div>
-              </div>
-              <div class="tank-info-cell">
-                <h4>Reservatório Central</h4>
-                <p>Sensor Ultrassônico #01</p>
-                <div class="tank-val">85%</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tank-card">
-            <div class="tank-flex">
-              <div class="tank-visual-cell">
-                <div class="tank-visual"><div class="tank-fill" style="height: 42%;"></div></div>
-              </div>
-              <div class="tank-info-cell">
-                <h4>Reservatório Bloco A</h4>
-                <p>Sensor Pressão #02</p>
-                <div class="tank-val">42%</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tank-card">
-            <div class="tank-flex">
-              <div class="tank-visual-cell">
-                <div class="tank-visual"><div class="tank-fill" style="height: 18%; background: var(--danger);"></div></div>
-              </div>
-              <div class="tank-info-cell">
-                <h4>Reservatório Bloco B</h4>
-                <p>Sensor Ultrassônico #03</p>
-                <div class="tank-val" style="color: var(--danger);">18% (Baixo)</div>
-              </div>
-            </div>
+        <div class="tank-card">
+          <div class="tank-visual"><div class="tank-fill" id="fill-tanque-2" style="height: 52%;"></div></div>
+          <div class="tank-info">
+            <h4>Reservatório Bloco A</h4>
+            <p>Sensor Pressão #02</p>
+            <div class="tank-val" id="val-tanque-2">52%</div>
           </div>
         </div>
-      </section>
 
-      <!-- TAB 2: LANÇAMENTO MANUAL -->
-      <section id="novo-lancamento" class="tab-content no-print">
-        <h2 style="margin-bottom: 1.2rem; font-size: 1.2rem;">Lançar Nova Análise de Qualidade</h2>
-        <div class="form-card">
-          <form id="analysisForm" onsubmit="salvarAnalise(event)">
-            <div class="form-group">
-              <label>Ponto de Coleta / Reservatório</label>
-              <select id="ponto" class="form-control" required>
-                <option value="Reservatório Central">Reservatório Central</option>
-                <option value="Reservatório Bloco A">Reservatório Bloco A</option>
-                <option value="Reservatório Bloco B">Reservatório Bloco B</option>
-                <option value="Saída da Estação">Saída da Estação</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Parâmetro Analisado</label>
-              <select id="parametro" class="form-control" required>
-                <option value="pH">pH (Faixa ideal: 6.0 - 9.5)</option>
-                <option value="Cloro Residual Livre">Cloro Residual Livre (0.2 - 2.0 mg/L)</option>
-                <option value="Turbidez">Turbidez (0.0 - 5.0 uT)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Valor Medido</label>
-              <input type="number" step="0.01" id="valor" class="form-control" placeholder="Ex: 7.2" required />
-            </div>
-
-            <div class="form-group">
-              <label>Responsável / Analista</label>
-              <input type="text" id="responsavel" class="form-control" placeholder="Nome do técnico" required />
-            </div>
-
-            <button type="submit" class="btn">Salvar Registro</button>
-          </form>
+        <div class="tank-card">
+          <div class="tank-visual"><div class="tank-fill" id="fill-tanque-3" style="height: 18%;"></div></div>
+          <div class="tank-info">
+            <h4>Reservatório Bloco B</h4>
+            <p>Sensor Ultrassônico #03</p>
+            <div class="tank-val" style="color: var(--danger);" id="val-tanque-3">18% (Baixo)</div>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- TAB 3: HISTÓRICO -->
-      <section id="historico" class="tab-content active" style="margin-top: 1.5rem;">
-        <h2 style="margin-bottom: 0.8rem; font-size: 1.1rem;">Últimas Análises Físico-Químicas</h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Ponto de Coleta</th>
-                <th>Parâmetro</th>
-                <th>Valor Medido</th>
-                <th>Status</th>
-                <th>Responsável</th>
-              </tr>
-            </thead>
-            <tbody id="tabela-dados">
-              <!-- Preenchido via JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
-  </div>
+    <!-- TAB 2: LANÇAMENTO MANUAL -->
+    <section id="novo-lancamento" class="tab-content no-print">
+      <div class="section-title">📝 Lançar Análise Físico-Química</div>
+      <div class="form-card">
+        <form id="analysisForm" onsubmit="salvarAnalise(event)">
+          <div class="form-group">
+            <label>Ponto de Coleta / Reservatório</label>
+            <select id="ponto" class="form-control" required>
+              <option value="Reservatório Central">Reservatório Central</option>
+              <option value="Reservatório Bloco A">Reservatório Bloco A</option>
+              <option value="Reservatório Bloco B">Reservatório Bloco B</option>
+              <option value="Saída da Estação">Saída da Estação</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Parâmetro Analisado</label>
+            <select id="parametro" class="form-control" required>
+              <option value="pH">pH (Faixa ideal: 6.0 - 9.5)</option>
+              <option value="Cloro Residual Livre">Cloro Residual Livre (0.2 - 2.0 mg/L)</option>
+              <option value="Turbidez">Turbidez (0.0 - 5.0 uT)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Valor Medido</label>
+            <input type="number" step="0.01" id="valor" class="form-control" placeholder="Ex: 7.2" required />
+          </div>
+
+          <div class="form-group">
+            <label>Responsável / Analista</label>
+            <input type="text" id="responsavel" class="form-control" placeholder="Nome do técnico" required />
+          </div>
+
+          <button type="submit" class="btn">Salvar Registro</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 3: HISTÓRICO -->
+    <section id="historico" class="tab-content">
+      <div class="section-title">📋 Feed do Histórico de Análises e Telemetria</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Ponto / Origem</th>
+              <th>Parâmetro</th>
+              <th>Leitura</th>
+              <th>Status</th>
+              <th>Responsável</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-dados">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
   <script>
     const limites = {
@@ -324,11 +344,13 @@
       "Turbidez": { min: 0.0, max: 5.0, unidade: "uT" }
     };
 
-    let registros = JSON.parse(localStorage.getItem('aqua_logs')) || [
-      { data: '2026-08-10 08:30', ponto: 'Reservatório Central', parametro: 'pH', valor: 7.2, unidade: 'pH', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-10 08:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-10 08:45', ponto: 'Reservatório Bloco A', parametro: 'Cloro Residual Livre', valor: 0.1, unidade: 'mg/L', status: 'Não Conforme', responsavel: 'Técnico Campo' }
+    let registros = JSON.parse(localStorage.getItem('aqua_energy_logs')) || [
+      { data: '2026-08-10 10:30', ponto: 'Reservatório Central', parametro: 'pH', valor: 7.2, unidade: 'pH', status: 'Conforme', responsavel: 'Walter Messora' },
+      { data: '2026-08-10 10:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' },
+      { data: '2026-08-10 10:45', ponto: 'Reservatório Bloco A', parametro: 'Cloro Residual Livre', valor: 0.1, unidade: 'mg/L', status: 'Não Conforme', responsavel: 'Técnico Campo' }
     ];
+
+    let tanques = { 1: 85, 2: 52, 3: 18 };
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -374,12 +396,43 @@
       const novo = { data: dataStr, ponto, parametro, valor, unidade: regLim.unidade, status, responsavel };
       
       registros.unshift(novo);
-      localStorage.setItem('aqua_logs', JSON.stringify(registros));
+      localStorage.setItem('aqua_energy_logs', JSON.stringify(registros));
 
       renderTabela();
       document.getElementById('analysisForm').reset();
       alert(`Análise salva! Status: ${status}`);
-      switchTab('historico', document.querySelectorAll('.nav-btn')[1]);
+      switchTab('historico', document.querySelectorAll('.nav-btn')[2]);
+    }
+
+    function simularIoT() {
+      // Atualiza variação elétrica
+      const tensao = (218 + Math.random() * 6).toFixed(1);
+      const corrente = (13.5 + Math.random() * 2).toFixed(1);
+      const potencia = Math.round(tensao * corrente);
+
+      document.getElementById('val-tensao').innerHTML = `${tensao} <span class="unit">V</span>`;
+      document.getElementById('val-corrente').innerHTML = `${corrente} <span class="unit">A</span>`;
+      document.getElementById('val-potencia').innerHTML = `${potencia} <span class="unit">W</span>`;
+
+      // Atualiza tanques
+      for (let id in tanques) {
+        let varNivel = (Math.random() * 2 - 1);
+        tanques[id] = Math.min(100, Math.max(5, Math.round(tanques[id] + varNivel)));
+
+        const fillElem = document.getElementById(`fill-tanque-${id}`);
+        const valElem = document.getElementById(`val-tanque-${id}`);
+        
+        fillElem.style.height = `${tanques[id]}%`;
+        valElem.innerText = `${tanques[id]}%`;
+
+        if (tanques[id] < 20) {
+          valElem.style.color = 'var(--danger)';
+          fillElem.style.background = 'var(--danger)';
+        } else {
+          valElem.style.color = 'var(--text)';
+          fillElem.style.background = 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)';
+        }
+      }
     }
 
     function baixarPDF() {
@@ -387,6 +440,7 @@
     }
 
     renderTabela();
+    setInterval(simularIoT, 3000);
   </script>
 </body>
 </html>
