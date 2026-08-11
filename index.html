@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AquaControl + Energy - Sistema de Monitoramento Integrado</title>
+  <!-- Chart.js para gráficos profissionais -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @page {
       size: A4 portrait;
@@ -121,12 +123,18 @@
     .section-title { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Grid de Energia */
-    .energy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .energy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
     .energy-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--energy); border-radius: 10px; padding: 1rem; }
     .energy-card.solar { border-left-color: var(--success); }
     .energy-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
     .energy-card .number { font-size: 1.5rem; font-weight: bold; color: #fff; }
     .energy-card .unit { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Grid de Gráficos Analíticos */
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+    .chart-card h3 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; }
+    .chart-container { position: relative; height: 230px; width: 100%; }
 
     /* Tanks Grid */
     .tanks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
@@ -195,6 +203,7 @@
       main { padding: 0 !important; }
       .tab-content { display: block !important; }
       #novo-lancamento { display: none !important; }
+      .charts-grid { grid-template-columns: 1fr 1fr !important; }
     }
   </style>
 </head>
@@ -218,7 +227,7 @@
   </nav>
 
   <main>
-    <!-- TAB 1: DASHBOARD COMPLETO -->
+    <!-- TAB 1: DASHBOARD COMPLETO COM GRÁFICOS -->
     <section id="dashboard" class="tab-content active">
       <div class="section-title">⚡ Telemetria Elétrica (Bombas & Usina Solar)</div>
       <div class="energy-grid">
@@ -241,6 +250,23 @@
         <div class="energy-card solar">
           <h3>Geração Solar</h3>
           <div class="number" style="color: var(--success);" id="val-geracao">310.5 <span class="unit">kWh</span></div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO DE GRÁFICOS DINÂMICOS -->
+      <div class="section-title">📈 Análise Gráfica em Tempo Real</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Histórico de Nível dos Reservatórios (%)</h3>
+          <div class="chart-container">
+            <canvas id="chartNiveis"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Balanço Energético: Geração Solar vs Consumo (kWh)</h3>
+          <div class="chart-container">
+            <canvas id="chartEnergia"></canvas>
+          </div>
         </div>
       </div>
 
@@ -351,6 +377,50 @@
     ];
 
     let tanques = { 1: 85, 2: 52, 3: 18 };
+
+    // --- CONFIGURAÇÃO DOS GRÁFICOS (Chart.js) ---
+    const ctxNiveis = document.getElementById('chartNiveis').getContext('2d');
+    const chartNiveis = new Chart(ctxNiveis, {
+      type: 'line',
+      data: {
+        labels: ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00'],
+        datasets: [
+          { label: 'Res. Central', data: [90, 88, 87, 85, 86, 85, 85], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.3 },
+          { label: 'Res. Bloco A', data: [65, 62, 58, 55, 54, 52, 52], borderColor: '#0284c7', backgroundColor: 'transparent', tension: 0.3 },
+          { label: 'Res. Bloco B', data: [35, 30, 26, 22, 20, 18, 18], borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, min: 0, max: 100 }
+        }
+      }
+    });
+
+    const ctxEnergia = document.getElementById('chartEnergia').getContext('2d');
+    const chartEnergia = new Chart(ctxEnergia, {
+      type: 'bar',
+      data: {
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        datasets: [
+          { label: 'Geração Solar (kWh)', data: [42, 48, 55, 51, 46, 38, 30], backgroundColor: '#10b981' },
+          { label: 'Consumo Bombas (kWh)', data: [28, 30, 32, 29, 31, 22, 20], backgroundColor: '#eab308' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+        }
+      }
+    });
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
