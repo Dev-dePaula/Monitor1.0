@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AquaControl Energy Enterprise - Messogeo</title>
-  <!-- Chart.js para gráficos avançados -->
+  <title>AquaControl Energy Enterprise - Gestão de Contatos</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @page {
@@ -170,6 +169,9 @@
     .chat-bubble { background: #005c4b; color: #e9edef; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; max-width: 80%; align-self: flex-start; line-height: 1.4; border-left: 4px solid #25d366; }
     .chat-time { font-size: 0.7rem; color: #8696a0; text-align: right; margin-top: 4px; }
 
+    /* Layout da aba de funcionários */
+    .gestao-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+
     /* Tabela */
     .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
@@ -181,10 +183,12 @@
     .badge-warning { background: rgba(234, 179, 8, 0.15); color: var(--energy); border: 1px solid var(--energy); }
 
     /* Formulário */
-    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; max-width: 600px; }
+    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
     .form-group { margin-bottom: 1.2rem; }
     .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); }
     .form-control { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.9rem; }
+
+    .btn-del { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
 
     @media print {
       nav, .btn-action, .whatsapp-simulator, .no-print { display: none !important; }
@@ -202,13 +206,14 @@
       <button class="btn-action btn-pdf" onclick="baixarPDF()">📄 Exportar PDF</button>
       <div class="status-badge">
         <div class="pulse-dot"></div>
-        <span>Servidor IoT & IA Conectados</span>
+        <span>Servidor IoT & WhatsApp Conectados</span>
       </div>
     </div>
   </header>
 
   <nav class="no-print">
     <button class="nav-btn active" onclick="switchTab('dashboard', this)">📊 Painel Geral</button>
+    <button class="nav-btn" onclick="switchTab('gestao-equipe', this)">👥 Cadastrar Funcionários</button>
     <button class="nav-btn" onclick="switchTab('alertas-sim', this)">💬 Testar Alertas WhatsApp</button>
     <button class="nav-btn" onclick="switchTab('ordens-servico', this)">🔧 Ordens de Serviço (OS)</button>
     <button class="nav-btn" onclick="switchTab('novo-lancamento', this)">📝 Lançar Análise</button>
@@ -288,35 +293,94 @@
       </div>
     </section>
 
-    <!-- TAB 2: SIMULADOR DE ALERTAS WHATSAPP -->
+    <!-- TAB 2: GESTÃO DE FUNCIONÁRIOS -->
+    <section id="gestao-equipe" class="tab-content">
+      <div class="section-title">👥 Cadastro de Funcionários e Destinatários de Alertas</div>
+      
+      <div class="gestao-grid">
+        <div class="form-card">
+          <h3 style="margin-bottom: 1rem; font-size: 0.95rem; color: var(--primary);">Cadastrar Novo Contato</h3>
+          <form id="formFuncionario" onsubmit="cadastrarFuncionario(event)">
+            <div class="form-group">
+              <label>Nome do Funcionário</label>
+              <input type="text" id="funcNome" class="form-control" placeholder="Ex: Walter Messora" required />
+            </div>
+
+            <div class="form-group">
+              <label>Cargo / Função</label>
+              <input type="text" id="funcCargo" class="form-control" placeholder="Ex: Gestor Ambiental / Técnico" required />
+            </div>
+
+            <div class="form-group">
+              <label>Número do WhatsApp (com DDD)</label>
+              <input type="text" id="funcWhats" class="form-control" placeholder="Ex: (17) 99888-7766" required />
+            </div>
+
+            <div class="form-group">
+              <label>Receber Alertas Automáticos?</label>
+              <select id="funcAlertas" class="form-control">
+                <option value="Sim">Sim (Alertas Críticos)</option>
+                <option value="Não">Não (Apenas Consulta)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-action btn-pdf" style="width: 100%; justify-content: center;">Salvar Funcionário</button>
+          </form>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Cargo / Função</th>
+                <th>WhatsApp Cadastrado</th>
+                <th>Alertas Habilitados</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-funcionarios">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SIMULADOR DE ALERTAS WHATSAPP CONECTADO ÀS PESSOAS -->
     <section id="alertas-sim" class="tab-content">
-      <div class="section-title">💬 Módulo de Testes e Simulação de Alertas por WhatsApp</div>
+      <div class="section-title">💬 Módulo de Envio de Alertas via WhatsApp com Escolha de Destinatário</div>
       
       <div class="whatsapp-simulator">
         <div class="whatsapp-header">
-          <h3>🟢 WhatsApp Bot AquaControl — (17) 99999-8888</h3>
+          <h3>🟢 WhatsApp Bot AquaControl — Central Messogeo</h3>
           <span style="font-size: 0.75rem; color: #8696a0;">Status: API Twilio / WhatsApp Business Conectada</span>
         </div>
 
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Clique nos botões abaixo para simular disparos de ocorrências reais e verificar como as mensagens chegarão no seu celular:</p>
+        <div style="margin-bottom: 1rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+          <label style="font-size: 0.85rem; color: var(--text-muted);"><strong>Escolher Destinatário do Alerta:</strong></label>
+          <select id="selectDestinatarioWhats" class="form-control" style="max-width: 320px; border-color: #25d366;">
+            <!-- Preenchido dinamicamente com os funcionários cadastrados -->
+          </select>
+        </div>
 
         <div class="sim-controls">
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('nivel_baixo')">🚨 Simular Nível Baixo (&lt; 20%)</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('cloro_fora')">⚠️ Simular Cloro Fora do Padrão</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('sobrecorrente')">⚡ Simular Sobrecorrente na Bomba</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('vazamento')">🔍 Simular Suspeita de Vazamento</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('nivel_baixo')">🚨 Enviar Nível Baixo (&lt; 20%)</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('cloro_fora')">⚠️ Enviar Cloro Fora do Padrão</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('sobrecorrente')">⚡ Enviar Sobrecorrente na Bomba</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('vazamento')">🔍 Enviar Suspeita de Vazamento</button>
         </div>
 
         <div class="chat-box" id="chat-whatsapp-logs">
           <div class="chat-bubble">
-            <strong>🤖 AquaControl System:</strong> Módulo de alertas do WhatsApp ativado com sucesso para <strong>Messogeo Consultoria Ambiental</strong>. Disparos automáticos configurados para a equipe técnica.
+            <strong>🤖 AquaControl System:</strong> Módulo de alertas ativo. Escolha o funcionário cadastrado acima e clique para simular o disparo personalizado.
             <div class="chat-time">Hoje 09:00</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 3: ORDENS DE SERVIÇO (OS) -->
+    <!-- TAB 4: ORDENS DE SERVIÇO (OS) -->
     <section id="ordens-servico" class="tab-content">
       <div class="section-title">🔧 Módulo de Ordens de Serviço (OS Automáticas)</div>
       <div class="table-container">
@@ -342,24 +406,15 @@
               <td><span class="badge badge-warning">Em Atendimento</span></td>
               <td>Walter Messora</td>
             </tr>
-            <tr>
-              <td><strong>OS-2026-088</strong></td>
-              <td>10/08/2026 14:15</td>
-              <td>Ponto Saída Bloco A</td>
-              <td>Ajuste de dosagem de Cloro Residual (0.1 mg/L)</td>
-              <td><span class="badge badge-warning">MÉDIA</span></td>
-              <td><span class="badge badge-success">Concluída</span></td>
-              <td>Técnico de Campo</td>
-            </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- TAB 4: LANÇAMENTO MANUAL -->
+    <!-- TAB 5: LANÇAMENTO MANUAL -->
     <section id="novo-lancamento" class="tab-content no-print">
       <div class="section-title">📝 Lançar Nova Análise Físico-Química</div>
-      <div class="form-card">
+      <div class="form-card" style="max-width: 600px;">
         <form id="analysisForm" onsubmit="salvarAnalise(event)">
           <div class="form-group">
             <label>Ponto de Coleta / Reservatório</label>
@@ -387,7 +442,9 @@
 
           <div class="form-group">
             <label>Responsável / Analista</label>
-            <input type="text" id="responsavel" class="form-control" placeholder="Nome do técnico" required />
+            <select id="responsavelSelect" class="form-control" required>
+              <!-- Preenchido dinamicamente com os funcionários cadastrados -->
+            </select>
           </div>
 
           <button type="submit" class="btn-action btn-pdf" style="width: 100%; justify-content: center;">Salvar e Validar Registro</button>
@@ -395,7 +452,7 @@
       </div>
     </section>
 
-    <!-- TAB 5: HISTÓRICO -->
+    <!-- TAB 6: HISTÓRICO -->
     <section id="historico" class="tab-content">
       <div class="section-title">📋 Registro Histórico e Conformidade Normativa (Portaria GM/MS nº 888)</div>
       <div class="table-container">
@@ -425,13 +482,80 @@
       "Turbidez": { min: 0.0, max: 5.0, unidade: "uT" }
     };
 
+    // Cadastro Dinâmico de Funcionários
+    let funcionarios = JSON.parse(localStorage.getItem('aqua_funcionarios')) || [
+      { id: 1, nome: "Walter Messora", cargo: "Gestor Ambiental", whats: "(17) 99888-1122", alertas: "Sim" },
+      { id: 2, nome: "Técnico de Campo 01", cargo: "Operador de ETA", whats: "(17) 99777-3344", alertas: "Sim" },
+      { id: 3, nome: "Engenharia Messogeo", cargo: "Consultor Técnico", whats: "(17) 99666-5566", alertas: "Não" }
+    ];
+
     let registros = JSON.parse(localStorage.getItem('aqua_enterprise_logs')) || [
       { data: '2026-08-11 08:30', ponto: 'Reservatório Central', parametro: 'pH', valor: 7.2, unidade: 'pH', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-11 08:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-10 14:15', ponto: 'Reservatório Bloco A', parametro: 'Cloro Residual Livre', valor: 0.1, unidade: 'mg/L', status: 'Não Conforme', responsavel: 'Técnico Campo' }
+      { data: '2026-08-11 08:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' }
     ];
 
     let tanques = { 1: 85, 2: 52, 3: 18 };
+
+    // --- RENDERIZAR TABELA E SELECTS DE FUNCIONÁRIOS ---
+    function renderFuncionarios() {
+      const tbody = document.getElementById('tabela-funcionarios');
+      const selectWhats = document.getElementById('selectDestinatarioWhats');
+      const selectResp = document.getElementById('responsavelSelect');
+
+      tbody.innerHTML = '';
+      selectWhats.innerHTML = '';
+      selectResp.innerHTML = '';
+
+      funcionarios.forEach((f, idx) => {
+        // Tabela
+        const tr = document.createElement('tr');
+        const badgeClass = f.alertas === 'Sim' ? 'badge-success' : 'badge-warning';
+
+        tr.innerHTML = `
+          <td><strong>${f.nome}</strong></td>
+          <td>${f.cargo}</td>
+          <td>📱 ${f.whats}</td>
+          <td><span class="badge ${badgeClass}">${f.alertas}</span></td>
+          <td><button class="btn-del" onclick="removerFuncionario(${idx})">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+
+        // Select do Simulador de WhatsApp
+        const optW = document.createElement('option');
+        optW.value = f.whats;
+        optW.innerText = `${f.nome} — ${f.whats}`;
+        selectWhats.appendChild(optW);
+
+        // Select do Formulário de Análise
+        const optR = document.createElement('option');
+        optR.value = f.nome;
+        optR.innerText = `${f.nome} (${f.cargo})`;
+        selectResp.appendChild(optR);
+      });
+
+      localStorage.setItem('aqua_funcionarios', JSON.stringify(funcionarios));
+    }
+
+    function cadastrarFuncionario(e) {
+      e.preventDefault();
+      const nome = document.getElementById('funcNome').value;
+      const cargo = document.getElementById('funcCargo').value;
+      const whats = document.getElementById('funcWhats').value;
+      const alertas = document.getElementById('funcAlertas').value;
+
+      funcionarios.push({ id: Date.now(), nome, cargo, whats, alertas });
+      renderFuncionarios();
+
+      document.getElementById('formFuncionario').reset();
+      alert(`Funcionário ${nome} cadastrado com sucesso!`);
+    }
+
+    function removerFuncionario(idx) {
+      if (confirm(`Deseja remover ${funcionarios[idx].nome}?`)) {
+        funcionarios.splice(idx, 1);
+        renderFuncionarios();
+      }
+    }
 
     // --- GRÁFICOS CHART.JS ---
     const ctxNiveis = document.getElementById('chartNiveis').getContext('2d');
@@ -509,7 +633,7 @@
       const ponto = document.getElementById('ponto').value;
       const parametro = document.getElementById('parametro').value;
       const valor = parseFloat(document.getElementById('valor').value);
-      const responsavel = document.getElementById('responsavel').value;
+      const responsavel = document.getElementById('responsavelSelect').value;
 
       const regLim = limites[parametro];
       const conforme = valor >= regLim.min && valor <= regLim.max;
@@ -533,28 +657,32 @@
         alert(`Análise salva com sucesso! Status: Conforme.`);
       }
 
-      switchTab('historico', document.querySelectorAll('.nav-btn')[4]);
+      switchTab('historico', document.querySelectorAll('.nav-btn')[5]);
     }
 
-    // --- SIMULADOR DE WHATSAPP EM TEMPO REAL ---
+    // --- SIMULADOR DE WHATSAPP CONECTADO AO DESTINATÁRIO ESCOLHIDO ---
     function simularDisparoWhatsApp(tipo) {
       const chatBox = document.getElementById('chat-whatsapp-logs');
+      const selectWhats = document.getElementById('selectDestinatarioWhats');
+      const numDestino = selectWhats.value;
+      const nomeDestino = selectWhats.options[selectWhats.selectedIndex].text.split('—')[0].trim();
       const agora = new Date().toLocaleTimeString().slice(0,5);
+
       let mensagem = '';
 
       if (tipo === 'nivel_baixo') {
-        mensagem = `🚨 <strong>ALERTA DE NÍVEL CRÍTICO:</strong><br>O <strong>Reservatório Bloco B</strong> atingiu <strong>18%</strong> de capacidade.<br>⏱️ <em>Autonomia estimada: 45 minutos.</em><br>🔧 Ordem de Serviço OS-2026-089 gerada automaticamente.`;
+        mensagem = `🚨 <strong>ALERTA DE NÍVEL CRÍTICO:</strong><br>Enviar para: <strong>${nomeDestino} (${numDestino})</strong><br>O <strong>Reservatório Bloco B</strong> atingiu <strong>18%</strong>.<br>⏱️ <em>Autonomia estimada: 45 minutos.</em>`;
       } else if (tipo === 'cloro_fora') {
-        mensagem = `⚠️ <strong>ALERTA DE QUALIDADE DA ÁGUA:</strong><br>Amostra coletada no <strong>Ponto Saída Bloco A</strong> registrou <strong>Cloro Residual em 0.1 mg/L</strong> (Abaixo do mínimo regulatório de 0.2 mg/L).<br>🧪 <em>Ação recomendada: Ajustar dosagem do clorador.</em>`;
+        mensagem = `⚠️ <strong>ALERTA DE QUALIDADE DA ÁGUA:</strong><br>Enviar para: <strong>${nomeDestino} (${numDestino})</strong><br>Amostra no <strong>Ponto Saída Bloco A</strong> registrou <strong>Cloro em 0.1 mg/L</strong>.<br>🧪 <em>Ação recomendada: Ajustar dosagem.</em>`;
       } else if (tipo === 'sobrecorrente') {
-        mensagem = `⚡ <strong>ALERTA ELÉTRICO DE MOTOR:</strong><br>A <strong>Bomba de Recalque 01</strong> registrou corrente de <strong>22.4A</strong> (Acima do limite nominal de 18A).<br>🛡️ <em>Desligamento preventivo acionado pelo relé virtual.</em>`;
+        mensagem = `⚡ <strong>ALERTA ELÉTRICO DE MOTOR:</strong><br>Enviar para: <strong>${nomeDestino} (${numDestino})</strong><br>A <strong>Bomba de Recalque 01</strong> registrou corrente de <strong>22.4A</strong>.<br>🛡️ <em>Desligamento preventivo ativado.</em>`;
       } else if (tipo === 'vazamento') {
-        mensagem = `🔍 <strong>SUSPEITA DE VAZAMENTO (SISTEMA IA):</strong><br>Queda constante de nível no <strong>Reservatório Central (1.4 m³/h)</strong> identificada entre 02:00 e 04:00 (Sem consumo esperado).<br>📍 <em>Verificar tubulação de distribuição.</em>`;
+        mensagem = `🔍 <strong>SUSPEITA DE VAZAMENTO (SISTEMA IA):</strong><br>Enviar para: <strong>${nomeDestino} (${numDestino})</strong><br>Queda constante de nível no <strong>Reservatório Central (1.4 m³/h)</strong>.`;
       }
 
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble';
-      bubble.innerHTML = `<strong>🤖 AquaControl Alert Bot:</strong><br>${mensagem}<div class="chat-time">${agora}</div>`;
+      bubble.innerHTML = `<strong>🤖 WhatsApp Bot — Disparo Enviado:</strong><br>${mensagem}<div class="chat-time">${agora}</div>`;
       
       chatBox.appendChild(bubble);
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -585,6 +713,7 @@
       window.print();
     }
 
+    renderFuncionarios();
     renderTabela();
     setInterval(simularIoT, 4000);
   </script>
