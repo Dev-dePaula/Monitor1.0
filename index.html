@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AquaControl + Energy - Sistema de Monitoramento Integrado</title>
-  <!-- Chart.js para gráficos profissionais -->
+  <title>AquaControl Energy Enterprise - Messogeo</title>
+  <!-- Chart.js para gráficos avançados -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @page {
@@ -20,8 +20,8 @@
       --card-bg: #1e293b;
       --border: #334155;
       --primary: #0284c7;
-      --primary-hover: #0369a1;
       --energy: #eab308;
+      --whatsapp: #22c55e;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --success: #10b981;
@@ -46,22 +46,24 @@
     }
 
     header h1 { font-size: 1.3rem; color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 10px; }
-    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
 
-    .btn-pdf {
-      background: #10b981;
+    .btn-action {
+      background: #1e293b;
       color: #ffffff;
-      border: none;
-      padding: 8px 16px;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
       border-radius: 6px;
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
+    .btn-action:hover { background: #334155; }
+    .btn-pdf { background: #10b981; border: none; }
     .btn-pdf:hover { background: #059669; }
 
     .status-badge {
@@ -97,6 +99,7 @@
       padding: 0.75rem 2rem;
       display: flex;
       gap: 10px;
+      overflow-x: auto;
     }
 
     nav button {
@@ -106,8 +109,9 @@
       padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
+      white-space: nowrap;
       transition: all 0.2s;
     }
     nav button.active, nav button:hover {
@@ -120,157 +124,137 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .section-title { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-title { font-size: 1rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Grid de Energia */
-    .energy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .energy-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--energy); border-radius: 10px; padding: 1rem; }
-    .energy-card.solar { border-left-color: var(--success); }
-    .energy-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-    .energy-card .number { font-size: 1.5rem; font-weight: bold; color: #fff; }
-    .energy-card .unit { font-size: 0.85rem; color: var(--text-muted); }
+    /* Key Performance Indicators */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+    .kpi-card.highlight { border-left: 4px solid var(--primary); }
+    .kpi-card.energy { border-left: 4px solid var(--energy); }
+    .kpi-card.success { border-left: 4px solid var(--success); }
+    .kpi-card.danger { border-left: 4px solid var(--danger); }
+    .kpi-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .kpi-card .number { font-size: 1.4rem; font-weight: bold; color: #fff; }
+    .kpi-card .subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
     /* Grid de Gráficos Analíticos */
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
     .chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
-    .chart-card h3 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; }
-    .chart-container { position: relative; height: 230px; width: 100%; }
+    .chart-card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; }
+    .chart-container { position: relative; height: 220px; width: 100%; }
 
-    /* Tanks Grid */
+    /* Tanques de Reservatório */
     .tanks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
     .tank-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; display: flex; gap: 1.2rem; align-items: center; }
-
-    .tank-visual {
-      width: 50px;
-      height: 90px;
-      border: 2px solid #64748b;
-      border-radius: 6px;
-      position: relative;
-      overflow: hidden;
-      background: #0f172a;
-    }
-
-    .tank-fill {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-      transition: height 0.8s ease-in-out;
-    }
-
+    .tank-visual { width: 45px; height: 85px; border: 2px solid #64748b; border-radius: 6px; position: relative; overflow: hidden; background: #0f172a; }
+    .tank-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); transition: height 0.8s ease-in-out; }
     .tank-info { flex: 1; }
-    .tank-info h4 { font-size: 1rem; margin-bottom: 2px; }
-    .tank-info p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-    .tank-val { font-size: 1.3rem; font-weight: bold; }
+    .tank-info h4 { font-size: 0.95rem; margin-bottom: 2px; }
+    .tank-info p { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+    .tank-val { font-size: 1.2rem; font-weight: bold; }
 
-    /* Formulário */
-    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; max-width: 600px; }
-    .form-group { margin-bottom: 1.2rem; }
-    .form-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted); }
-    .form-control {
-      width: 100%;
-      padding: 10px 14px;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: #fff;
-      font-size: 0.95rem;
+    /* Painel do Simulador de WhatsApp */
+    .whatsapp-simulator {
+      background: #0b141a;
+      border: 1px solid #22c55e;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
     }
-    .btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .whatsapp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #1f2c34; padding-bottom: 10px; }
+    .whatsapp-header h3 { color: #25d366; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .sim-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .btn-sim { background: #1f2c34; border: 1px solid #374955; color: #e9edef; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+    .btn-sim:hover { background: #2a3942; }
+    .chat-box { background: #0b141a; border-radius: 8px; padding: 10px; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-bubble { background: #005c4b; color: #e9edef; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; max-width: 80%; align-self: flex-start; line-height: 1.4; border-left: 4px solid #25d366; }
+    .chat-time { font-size: 0.7rem; color: #8696a0; text-align: right; margin-top: 4px; }
 
     /* Tabela */
     .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
     th { background: #0f172a; padding: 12px 14px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
     td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
-
-    .badge { padding: 4px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+    .badge { padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; }
     .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
     .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-warning { background: rgba(234, 179, 8, 0.15); color: var(--energy); border: 1px solid var(--energy); }
+
+    /* Formulário */
+    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; max-width: 600px; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); }
+    .form-control { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.9rem; }
 
     @media print {
-      nav, .btn-pdf, #novo-lancamento, .no-print { display: none !important; }
+      nav, .btn-action, .whatsapp-simulator, .no-print { display: none !important; }
       body { background-color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       main { padding: 0 !important; }
       .tab-content { display: block !important; }
-      #novo-lancamento { display: none !important; }
-      .charts-grid { grid-template-columns: 1fr 1fr !important; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>💧⚡ AquaControl Energy - Messogeo</h1>
+    <h1>💧⚡ AquaControl Enterprise - Messogeo</h1>
     <div class="header-actions">
-      <button class="btn-pdf" onclick="baixarPDF()">📄 Baixar Relatório PDF</button>
+      <button class="btn-action btn-pdf" onclick="baixarPDF()">📄 Exportar PDF</button>
       <div class="status-badge">
         <div class="pulse-dot"></div>
-        <span>Telemetria IoT / API Ativa</span>
+        <span>Servidor IoT & IA Conectados</span>
       </div>
     </div>
   </header>
 
   <nav class="no-print">
-    <button class="nav-btn active" onclick="switchTab('dashboard', this)">📊 Painel de Controle</button>
+    <button class="nav-btn active" onclick="switchTab('dashboard', this)">📊 Painel Geral</button>
+    <button class="nav-btn" onclick="switchTab('alertas-sim', this)">💬 Testar Alertas WhatsApp</button>
+    <button class="nav-btn" onclick="switchTab('ordens-servico', this)">🔧 Ordens de Serviço (OS)</button>
     <button class="nav-btn" onclick="switchTab('novo-lancamento', this)">📝 Lançar Análise</button>
-    <button class="nav-btn" onclick="switchTab('historico', this)">📋 Histórico de Coletas</button>
+    <button class="nav-btn" onclick="switchTab('historico', this)">📋 Histórico e Laudos</button>
   </nav>
 
   <main>
-    <!-- TAB 1: DASHBOARD COMPLETO COM GRÁFICOS -->
+    <!-- TAB 1: DASHBOARD COMPLETO -->
     <section id="dashboard" class="tab-content active">
-      <div class="section-title">⚡ Telemetria Elétrica (Bombas & Usina Solar)</div>
-      <div class="energy-grid">
-        <div class="energy-card">
-          <h3>Tensão (V)</h3>
-          <div class="number" id="val-tensao">221.5 <span class="unit">V</span></div>
+      <div class="section-title">📊 Eficiência Operacional & Custo Específico</div>
+      <div class="kpi-grid">
+        <div class="kpi-card highlight">
+          <h3>Custo de Energia por m³</h3>
+          <div class="number">R$ 0,22 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">/ m³</span></div>
+          <div class="subtext">Ideal: &lt; R$ 0,28 / m³ (Excelente)</div>
         </div>
-        <div class="energy-card">
-          <h3>Corrente (A)</h3>
-          <div class="number" id="val-corrente">14.2 <span class="unit">A</span></div>
+        <div class="kpi-card energy">
+          <h3>Consumo Bombas</h3>
+          <div class="number">142,8 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">kWh</span></div>
+          <div class="subtext">Tensão Média: 221.5V (Estável)</div>
         </div>
-        <div class="energy-card">
-          <h3>Potência Ativa</h3>
-          <div class="number" id="val-potencia">3.145 <span class="unit">W</span></div>
+        <div class="kpi-card success">
+          <h3>Geração Usina Solar</h3>
+          <div class="number">310,5 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">kWh</span></div>
+          <div class="subtext">Balanço: +167,7 kWh Injetados</div>
         </div>
-        <div class="energy-card">
-          <h3>Consumo</h3>
-          <div class="number" id="val-consumo">142.8 <span class="unit">kWh</span></div>
-        </div>
-        <div class="energy-card solar">
-          <h3>Geração Solar</h3>
-          <div class="number" style="color: var(--success);" id="val-geracao">310.5 <span class="unit">kWh</span></div>
+        <div class="kpi-card danger">
+          <h3>Vazamento Estimado (IA)</h3>
+          <div class="number">0,00 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">m³/h</span></div>
+          <div class="subtext">Rede Bloco A e B Sem Alteração</div>
         </div>
       </div>
 
-      <!-- SEÇÃO DE GRÁFICOS DINÂMICOS -->
-      <div class="section-title">📈 Análise Gráfica em Tempo Real</div>
+      <div class="section-title">📈 Análises Gráficas de Telemetria e Energia</div>
       <div class="charts-grid">
         <div class="chart-card">
           <h3>Histórico de Nível dos Reservatórios (%)</h3>
-          <div class="chart-container">
-            <canvas id="chartNiveis"></canvas>
-          </div>
+          <div class="chart-container"><canvas id="chartNiveis"></canvas></div>
         </div>
         <div class="chart-card">
-          <h3>Balanço Energético: Geração Solar vs Consumo (kWh)</h3>
-          <div class="chart-container">
-            <canvas id="chartEnergia"></canvas>
-          </div>
+          <h3>Balanço Energético: Solar vs Bombas (kWh)</h3>
+          <div class="chart-container"><canvas id="chartEnergia"></canvas></div>
         </div>
       </div>
 
-      <div class="section-title">💧 Nível dos Reservatórios em Tempo Real (IoT)</div>
+      <div class="section-title">💧 Reservatórios e Telemetria de Nível (IoT em Tempo Real)</div>
       <div class="tanks-grid">
         <div class="tank-card">
           <div class="tank-visual"><div class="tank-fill" id="fill-tanque-1" style="height: 85%;"></div></div>
@@ -278,6 +262,7 @@
             <h4>Reservatório Central</h4>
             <p>Sensor Ultrassônico #01</p>
             <div class="tank-val" id="val-tanque-1">85%</div>
+            <p style="font-size: 0.7rem; color: var(--success); margin-top: 4px;">Autonomia: ~18 Horas</p>
           </div>
         </div>
 
@@ -287,6 +272,7 @@
             <h4>Reservatório Bloco A</h4>
             <p>Sensor Pressão #02</p>
             <div class="tank-val" id="val-tanque-2">52%</div>
+            <p style="font-size: 0.7rem; color: var(--success); margin-top: 4px;">Autonomia: ~11 Horas</p>
           </div>
         </div>
 
@@ -295,15 +281,84 @@
           <div class="tank-info">
             <h4>Reservatório Bloco B</h4>
             <p>Sensor Ultrassônico #03</p>
-            <div class="tank-val" style="color: var(--danger);" id="val-tanque-3">18% (Baixo)</div>
+            <div class="tank-val" style="color: var(--danger);" id="val-tanque-3">18% (Crítico)</div>
+            <p style="font-size: 0.7rem; color: var(--danger); margin-top: 4px;">Autonomia: ~45 Minutos</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 2: LANÇAMENTO MANUAL -->
+    <!-- TAB 2: SIMULADOR DE ALERTAS WHATSAPP -->
+    <section id="alertas-sim" class="tab-content">
+      <div class="section-title">💬 Módulo de Testes e Simulação de Alertas por WhatsApp</div>
+      
+      <div class="whatsapp-simulator">
+        <div class="whatsapp-header">
+          <h3>🟢 WhatsApp Bot AquaControl — (17) 99999-8888</h3>
+          <span style="font-size: 0.75rem; color: #8696a0;">Status: API Twilio / WhatsApp Business Conectada</span>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Clique nos botões abaixo para simular disparos de ocorrências reais e verificar como as mensagens chegarão no seu celular:</p>
+
+        <div class="sim-controls">
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('nivel_baixo')">🚨 Simular Nível Baixo (&lt; 20%)</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('cloro_fora')">⚠️ Simular Cloro Fora do Padrão</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('sobrecorrente')">⚡ Simular Sobrecorrente na Bomba</button>
+          <button class="btn-sim" onclick="simularDisparoWhatsApp('vazamento')">🔍 Simular Suspeita de Vazamento</button>
+        </div>
+
+        <div class="chat-box" id="chat-whatsapp-logs">
+          <div class="chat-bubble">
+            <strong>🤖 AquaControl System:</strong> Módulo de alertas do WhatsApp ativado com sucesso para <strong>Messogeo Consultoria Ambiental</strong>. Disparos automáticos configurados para a equipe técnica.
+            <div class="chat-time">Hoje 09:00</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ORDENS DE SERVIÇO (OS) -->
+    <section id="ordens-servico" class="tab-content">
+      <div class="section-title">🔧 Módulo de Ordens de Serviço (OS Automáticas)</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Código OS</th>
+              <th>Abertura</th>
+              <th>Local / Equipamento</th>
+              <th>Motivo do Chamado</th>
+              <th>Prioridade</th>
+              <th>Status OS</th>
+              <th>Técnico Responsável</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-os">
+            <tr>
+              <td><strong>OS-2026-089</strong></td>
+              <td>11/08/2026 08:30</td>
+              <td>Reservatório Bloco B</td>
+              <td>Nível crítico detectado abaixo do limite mínimo (18%)</td>
+              <td><span class="badge badge-danger">ALTA</span></td>
+              <td><span class="badge badge-warning">Em Atendimento</span></td>
+              <td>Walter Messora</td>
+            </tr>
+            <tr>
+              <td><strong>OS-2026-088</strong></td>
+              <td>10/08/2026 14:15</td>
+              <td>Ponto Saída Bloco A</td>
+              <td>Ajuste de dosagem de Cloro Residual (0.1 mg/L)</td>
+              <td><span class="badge badge-warning">MÉDIA</span></td>
+              <td><span class="badge badge-success">Concluída</span></td>
+              <td>Técnico de Campo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: LANÇAMENTO MANUAL -->
     <section id="novo-lancamento" class="tab-content no-print">
-      <div class="section-title">📝 Lançar Análise Físico-Química</div>
+      <div class="section-title">📝 Lançar Nova Análise Físico-Química</div>
       <div class="form-card">
         <form id="analysisForm" onsubmit="salvarAnalise(event)">
           <div class="form-group">
@@ -335,14 +390,14 @@
             <input type="text" id="responsavel" class="form-control" placeholder="Nome do técnico" required />
           </div>
 
-          <button type="submit" class="btn">Salvar Registro</button>
+          <button type="submit" class="btn-action btn-pdf" style="width: 100%; justify-content: center;">Salvar e Validar Registro</button>
         </form>
       </div>
     </section>
 
-    <!-- TAB 3: HISTÓRICO -->
+    <!-- TAB 5: HISTÓRICO -->
     <section id="historico" class="tab-content">
-      <div class="section-title">📋 Feed do Histórico de Análises e Telemetria</div>
+      <div class="section-title">📋 Registro Histórico e Conformidade Normativa (Portaria GM/MS nº 888)</div>
       <div class="table-container">
         <table>
           <thead>
@@ -350,8 +405,8 @@
               <th>Data/Hora</th>
               <th>Ponto / Origem</th>
               <th>Parâmetro</th>
-              <th>Leitura</th>
-              <th>Status</th>
+              <th>Leitura Medida</th>
+              <th>Status Conformidade</th>
               <th>Responsável</th>
             </tr>
           </thead>
@@ -370,24 +425,24 @@
       "Turbidez": { min: 0.0, max: 5.0, unidade: "uT" }
     };
 
-    let registros = JSON.parse(localStorage.getItem('aqua_energy_logs')) || [
-      { data: '2026-08-10 10:30', ponto: 'Reservatório Central', parametro: 'pH', valor: 7.2, unidade: 'pH', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-10 10:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' },
-      { data: '2026-08-10 10:45', ponto: 'Reservatório Bloco A', parametro: 'Cloro Residual Livre', valor: 0.1, unidade: 'mg/L', status: 'Não Conforme', responsavel: 'Técnico Campo' }
+    let registros = JSON.parse(localStorage.getItem('aqua_enterprise_logs')) || [
+      { data: '2026-08-11 08:30', ponto: 'Reservatório Central', parametro: 'pH', valor: 7.2, unidade: 'pH', status: 'Conforme', responsavel: 'Walter Messora' },
+      { data: '2026-08-11 08:32', ponto: 'Reservatório Central', parametro: 'Cloro Residual Livre', valor: 1.5, unidade: 'mg/L', status: 'Conforme', responsavel: 'Walter Messora' },
+      { data: '2026-08-10 14:15', ponto: 'Reservatório Bloco A', parametro: 'Cloro Residual Livre', valor: 0.1, unidade: 'mg/L', status: 'Não Conforme', responsavel: 'Técnico Campo' }
     ];
 
     let tanques = { 1: 85, 2: 52, 3: 18 };
 
-    // --- CONFIGURAÇÃO DOS GRÁFICOS (Chart.js) ---
+    // --- GRÁFICOS CHART.JS ---
     const ctxNiveis = document.getElementById('chartNiveis').getContext('2d');
     const chartNiveis = new Chart(ctxNiveis, {
       type: 'line',
       data: {
-        labels: ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00'],
+        labels: ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00'],
         datasets: [
-          { label: 'Res. Central', data: [90, 88, 87, 85, 86, 85, 85], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.3 },
-          { label: 'Res. Bloco A', data: [65, 62, 58, 55, 54, 52, 52], borderColor: '#0284c7', backgroundColor: 'transparent', tension: 0.3 },
-          { label: 'Res. Bloco B', data: [35, 30, 26, 22, 20, 18, 18], borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3 }
+          { label: 'Res. Central', data: [92, 90, 88, 86, 85, 85], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.3 },
+          { label: 'Res. Bloco A', data: [68, 62, 58, 55, 53, 52], borderColor: '#0284c7', backgroundColor: 'transparent', tension: 0.3 },
+          { label: 'Res. Bloco B', data: [40, 32, 25, 20, 18, 18], borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3 }
         ]
       },
       options: {
@@ -407,8 +462,8 @@
       data: {
         labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
         datasets: [
-          { label: 'Geração Solar (kWh)', data: [42, 48, 55, 51, 46, 38, 30], backgroundColor: '#10b981' },
-          { label: 'Consumo Bombas (kWh)', data: [28, 30, 32, 29, 31, 22, 20], backgroundColor: '#eab308' }
+          { label: 'Geração Solar (kWh)', data: [45, 50, 58, 52, 48, 40, 35], backgroundColor: '#10b981' },
+          { label: 'Consumo Bombas (kWh)', data: [26, 28, 30, 29, 28, 20, 18], backgroundColor: '#eab308' }
         ]
       },
       options: {
@@ -466,25 +521,46 @@
       const novo = { data: dataStr, ponto, parametro, valor, unidade: regLim.unidade, status, responsavel };
       
       registros.unshift(novo);
-      localStorage.setItem('aqua_energy_logs', JSON.stringify(registros));
+      localStorage.setItem('aqua_enterprise_logs', JSON.stringify(registros));
 
       renderTabela();
       document.getElementById('analysisForm').reset();
-      alert(`Análise salva! Status: ${status}`);
-      switchTab('historico', document.querySelectorAll('.nav-btn')[2]);
+      
+      if (!conforme) {
+        simularDisparoWhatsApp('cloro_fora');
+        alert(`🚨 ATENÇÃO: Análise fora do padrão regulatório! Registro salvo e Alerta enviado via WhatsApp.`);
+      } else {
+        alert(`Análise salva com sucesso! Status: Conforme.`);
+      }
+
+      switchTab('historico', document.querySelectorAll('.nav-btn')[4]);
+    }
+
+    // --- SIMULADOR DE WHATSAPP EM TEMPO REAL ---
+    function simularDisparoWhatsApp(tipo) {
+      const chatBox = document.getElementById('chat-whatsapp-logs');
+      const agora = new Date().toLocaleTimeString().slice(0,5);
+      let mensagem = '';
+
+      if (tipo === 'nivel_baixo') {
+        mensagem = `🚨 <strong>ALERTA DE NÍVEL CRÍTICO:</strong><br>O <strong>Reservatório Bloco B</strong> atingiu <strong>18%</strong> de capacidade.<br>⏱️ <em>Autonomia estimada: 45 minutos.</em><br>🔧 Ordem de Serviço OS-2026-089 gerada automaticamente.`;
+      } else if (tipo === 'cloro_fora') {
+        mensagem = `⚠️ <strong>ALERTA DE QUALIDADE DA ÁGUA:</strong><br>Amostra coletada no <strong>Ponto Saída Bloco A</strong> registrou <strong>Cloro Residual em 0.1 mg/L</strong> (Abaixo do mínimo regulatório de 0.2 mg/L).<br>🧪 <em>Ação recomendada: Ajustar dosagem do clorador.</em>`;
+      } else if (tipo === 'sobrecorrente') {
+        mensagem = `⚡ <strong>ALERTA ELÉTRICO DE MOTOR:</strong><br>A <strong>Bomba de Recalque 01</strong> registrou corrente de <strong>22.4A</strong> (Acima do limite nominal de 18A).<br>🛡️ <em>Desligamento preventivo acionado pelo relé virtual.</em>`;
+      } else if (tipo === 'vazamento') {
+        mensagem = `🔍 <strong>SUSPEITA DE VAZAMENTO (SISTEMA IA):</strong><br>Queda constante de nível no <strong>Reservatório Central (1.4 m³/h)</strong> identificada entre 02:00 e 04:00 (Sem consumo esperado).<br>📍 <em>Verificar tubulação de distribuição.</em>`;
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.innerHTML = `<strong>🤖 AquaControl Alert Bot:</strong><br>${mensagem}<div class="chat-time">${agora}</div>`;
+      
+      chatBox.appendChild(bubble);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function simularIoT() {
-      // Atualiza variação elétrica
-      const tensao = (218 + Math.random() * 6).toFixed(1);
-      const corrente = (13.5 + Math.random() * 2).toFixed(1);
-      const potencia = Math.round(tensao * corrente);
-
-      document.getElementById('val-tensao').innerHTML = `${tensao} <span class="unit">V</span>`;
-      document.getElementById('val-corrente').innerHTML = `${corrente} <span class="unit">A</span>`;
-      document.getElementById('val-potencia').innerHTML = `${potencia} <span class="unit">W</span>`;
-
-      // Atualiza tanques
       for (let id in tanques) {
         let varNivel = (Math.random() * 2 - 1);
         tanques[id] = Math.min(100, Math.max(5, Math.round(tanques[id] + varNivel)));
@@ -510,7 +586,7 @@
     }
 
     renderTabela();
-    setInterval(simularIoT, 3000);
+    setInterval(simularIoT, 4000);
   </script>
 </body>
 </html>
