@@ -169,7 +169,7 @@
     .chat-bubble { background: #005c4b; color: #e9edef; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; max-width: 80%; align-self: flex-start; line-height: 1.4; border-left: 4px solid #25d366; }
     .chat-time { font-size: 0.7rem; color: #8696a0; text-align: right; margin-top: 4px; }
 
-    /* Layout da aba de funcionários */
+    /* Layout da aba de funcionários e formulário lado a lado */
     .gestao-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
 
     /* Tabela */
@@ -293,7 +293,7 @@
       </div>
     </section>
 
-    <!-- TAB 2: GESTÃO DE FUNCIONÁRIOS -->
+    <!-- NOVA TAB 2: GESTÃO DE FUNCIONÁRIOS -->
     <section id="gestao-equipe" class="tab-content">
       <div class="section-title">👥 Cadastro de Funcionários e Destinatários de Alertas</div>
       
@@ -364,12 +364,20 @@
           </select>
         </div>
 
-        <div class="sim-controls">
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('nivel_baixo')">🚨 Enviar Nível Baixo (&lt; 20%)</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('cloro_fora')">⚠️ Enviar Cloro Fora do Padrão</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('sobrecorrente')">⚡ Enviar Sobrecorrente na Bomba</button>
-          <button class="btn-sim" onclick="simularDisparoWhatsApp('vazamento')">🔍 Enviar Suspeita de Vazamento</button>
+        <div style="margin-bottom: 1rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+          <label style="font-size: 0.85rem; color: var(--text-muted);"><strong>Tipo de Ocorrência / Alerta:</strong></label>
+          <select id="selectTipoOcorrencia" class="form-control" style="max-width: 320px;">
+            <option value="nivel_baixo">🚨 Nível Crítico de Reservatório (&lt; 20%)</option>
+            <option value="cloro_fora">⚠️ Cloro Residual Fora da Norma</option>
+            <option value="sobrecorrente">⚡ Sobrecarga Elétrica na Bomba</option>
+            <option value="vazamento">🔍 Suspeita de Vazamento na Rede</option>
+          </select>
+          <button class="btn-action btn-pdf" style="background: #22c55e;" onclick="dispararAlertaManual()">🚀 Disparar Alerta Manual Agora</button>
         </div>
+        
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          <em>Nota: No modo operacional em tempo real, o servidor envia os alertas de forma <strong>100% automática</strong> assim que os sensores detectam desvios. O botão acima permite testes e envios manuais sob demanda.</em>
+        </p>
 
         <div class="chat-box" id="chat-whatsapp-logs">
           <div class="chat-bubble">
@@ -715,6 +723,17 @@
 
     renderFuncionarios();
     renderTabela();
+    
+    function dispararAlertaManual() {
+      const selectWhats = document.getElementById('selectDestinatarioWhats');
+      const tipo = document.getElementById('selectTipoOcorrencia').value;
+      const numDestino = selectWhats.value;
+      const nomeDestino = selectWhats.options[selectWhats.selectedIndex].text.split('—')[0].trim();
+      
+      simularDisparoWhatsApp(tipo);
+      alert(`✅ Alerta de teste enviado com sucesso para ${nomeDestino} (${numDestino})!`);
+    }
+
     setInterval(simularIoT, 4000);
   </script>
 </body>
